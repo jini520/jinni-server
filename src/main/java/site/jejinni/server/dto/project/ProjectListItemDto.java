@@ -14,5 +14,5 @@ public class ProjectListItemDto {
 	private String description;
 	private String[] skills;
 	private String period;
+	private Integer order;
 }
-
