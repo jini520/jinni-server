@@ -9,6 +9,6 @@ import java.util.UUID;
 
 public interface ProjectRepository extends JpaRepository<Project, UUID> {
 
-	Page<Project> findAllByOrderByCreatedAtDesc(Pageable pageable);
+	Page<Project> findAllByOrderByOrderAsc(Pageable pageable);
 }
 

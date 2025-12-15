@@ -16,6 +16,6 @@ public class ProjectDetailDto {
 	private String[] skills;
 	private Integer participants;
 	private String period;
+	private Integer order;
 	private List<ProjectContentDto> contents;
 }
-
