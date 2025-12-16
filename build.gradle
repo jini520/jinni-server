@@ -28,6 +28,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	// Jasypt for Spring Boot 3.x (설정 파일 암호화)
+	implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.5'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'org.postgresql:postgresql'
@@ -39,4 +41,33 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+// Jasypt 암호화/복호화 유틸리티 태스크
+task encryptValue(type: JavaExec) {
+	group = 'jasypt'
+	description = '값을 암호화합니다. 사용법: ./gradlew encryptValue -Pvalue="암호화할값" -Ppassword="암호화키"'
+	
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = 'site.jejinni.server.util.JasyptEncryptor'
+	
+	if (project.hasProperty('value') && project.hasProperty('password')) {
+		args = [project.property('value'), project.property('password')]
+	} else {
+		throw new GradleException('사용법: ./gradlew encryptValue -Pvalue="암호화할값" -Ppassword="암호화키"')
+	}
+}
+
+task decryptValue(type: JavaExec) {
+	group = 'jasypt'
+	description = '값을 복호화합니다. 사용법: ./gradlew decryptValue -Pvalue="ENC(암호화된값)" -Ppassword="암호화키"'
+	
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = 'site.jejinni.server.util.JasyptEncryptor'
+	
+	if (project.hasProperty('value') && project.hasProperty('password')) {
+		args = [project.property('value'), project.property('password'), '--decrypt']
+	} else {
+		throw new GradleException('사용법: ./gradlew decryptValue -Pvalue="ENC(암호화된값)" -Ppassword="암호화키"')
+	}
 }
