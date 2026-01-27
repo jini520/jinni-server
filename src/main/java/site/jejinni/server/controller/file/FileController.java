@@ -128,10 +128,16 @@ public class FileController {
     String extension = fileStorageService.getFileExtension(id, type);
     Resource resource = fileStorageService.loadFileAsResource(id, extension, type);
 
+    // 원본 파일명 가져오기
+    String originalFileName = fileStorageService.getOriginalFileName(id, type);
+    String downloadFileName = originalFileName != null && !originalFileName.isEmpty()
+        ? originalFileName
+        : resource.getFilename();
+
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
         .header(HttpHeaders.CONTENT_DISPOSITION,
-            "attachment; filename=\"" + resource.getFilename() + "\"")
+            "attachment; filename=\"" + downloadFileName + "\"")
         .body(resource);
   }
 
