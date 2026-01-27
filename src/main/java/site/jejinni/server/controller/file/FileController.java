@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import site.jejinni.server.dto.common.ApiResponse;
 import site.jejinni.server.dto.file.FileDto;
 import site.jejinni.server.dto.file.FileListDto;
+import site.jejinni.server.service.file.FileService;
 import site.jejinni.server.service.file.FileStorageService;
 import site.jejinni.server.service.file.FileType;
 
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 public class FileController {
 
   private final FileStorageService fileStorageService;
+  private final FileService fileService;
 
   /**
    * 파일 리스트 조회 (Read)
@@ -124,8 +126,8 @@ public class FileController {
       @RequestParam(value = "type", defaultValue = "DOCUMENT") FileType type) {
     Resource resource = fileStorageService.loadFileAsResource(id, type);
 
-    // 원본 파일명 가져오기 (항상 존재함)
-    String originalFileName = fileStorageService.getOriginalFileName(id, type);
+    // 원본 파일명 가져오기 (DB에서 조회)
+    String originalFileName = fileService.getFileInfo(id, type).getOriginalFileName();
     String resourceFilename = resource.getFilename();
 
     // Content-Disposition 헤더 생성 (RFC 5987 형식으로 인코딩)
@@ -164,36 +166,8 @@ public class FileController {
   public ResponseEntity<ApiResponse<FileDto>> getFileInfo(
       @PathVariable UUID id,
       @RequestParam(value = "type", defaultValue = "DOCUMENT") FileType type) {
-    boolean exists = fileStorageService.fileExists(id, type);
-
-    String originalFileName = fileStorageService.getOriginalFileName(id, type);
-
-    if (!exists) {
-      FileDto fileDto = FileDto.builder()
-          .id(id)
-          .originalFileName(originalFileName)
-          .fileType(type)
-          .exists(false)
-          .build();
-      return ResponseEntity.ok(new ApiResponse<>(fileDto));
-    }
-
-    // 파일 정보 조회
-    long fileSize = fileStorageService.getFileSize(id, type);
-    LocalDateTime createdAt = fileStorageService.getFileCreatedAt(id, type);
-    LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(id, type);
-
-    FileDto fileDto = FileDto.builder()
-        .id(id)
-        .originalFileName(originalFileName)
-        .fileType(type)
-        .fileSize(fileSize)
-        .downloadUrl("/api/files/download/" + id + "?type=" + type)
-        .exists(true)
-        .createdAt(createdAt)
-        .updatedAt(updatedAt)
-        .build();
-
+    // DB에서 파일 정보 조회
+    FileDto fileDto = fileService.getFileInfo(id, type);
     return ResponseEntity.ok(new ApiResponse<>(fileDto));
   }
 

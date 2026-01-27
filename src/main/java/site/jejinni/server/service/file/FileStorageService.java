@@ -131,12 +131,6 @@ public class FileStorageService {
       Path targetLocation = storageLocation.resolve(fileName);
       Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
-      // 원본 파일명을 메타데이터 파일로 저장
-      if (!originalName.isEmpty()) {
-        Path metaFile = storageLocation.resolve(fileId.toString() + ".meta");
-        Files.writeString(metaFile, originalName);
-      }
-
       return new FileInfo(fileId, fileExtension, originalName);
     } catch (IOException ex) {
       throw new RuntimeException("파일을 저장할 수 없습니다: " + fileName, ex);
@@ -250,18 +244,8 @@ public class FileStorageService {
             fileId = UUID.fromString(idString);
           }
 
-          // 메타데이터 파일에서 원본 파일명 읽기
-          String originalFileName = null;
-          try {
-            Path metaFile = storageLocation.resolve(fileId.toString() + ".meta");
-            if (Files.exists(metaFile)) {
-              originalFileName = Files.readString(metaFile).trim();
-            }
-          } catch (IOException e) {
-            // 메타데이터 파일 읽기 실패 시 무시
-          }
-
-          fileList.add(new FileInfo(fileId, extension, originalFileName));
+          // 원본 파일명은 DB에서 가져와야 하므로 null로 설정
+          fileList.add(new FileInfo(fileId, extension, null));
         }
       }
 
@@ -299,17 +283,13 @@ public class FileStorageService {
     return storeFile(newFile, fileType);
   }
 
+  /**
+   * @deprecated 원본 파일명은 이제 DB에서 가져와야 합니다. FileService.getFileInfo()를 사용하세요.
+   */
+  @Deprecated
   public String getOriginalFileName(UUID id, FileType fileType) {
-    try {
-      Path storageLocation = getStorageLocation(fileType);
-      Path metaFile = storageLocation.resolve(id.toString() + ".meta");
-      if (Files.exists(metaFile)) {
-        return Files.readString(metaFile).trim();
-      }
-      return null;
-    } catch (IOException ex) {
-      return null;
-    }
+    // DB에서 가져와야 하므로 더 이상 파일 시스템에서 읽지 않음
+    return null;
   }
 
   public String getFileExtension(UUID id, FileType fileType) {
@@ -347,10 +327,6 @@ public class FileStorageService {
       Path storageLocation = getStorageLocation(fileType);
       Path filePath = storageLocation.resolve(fileName).normalize();
       Files.deleteIfExists(filePath);
-
-      // 메타데이터 파일도 삭제
-      Path metaFile = storageLocation.resolve(id.toString() + ".meta");
-      Files.deleteIfExists(metaFile);
     } catch (IOException ex) {
       throw new RuntimeException("파일을 삭제할 수 없습니다: " + id, ex);
     }
