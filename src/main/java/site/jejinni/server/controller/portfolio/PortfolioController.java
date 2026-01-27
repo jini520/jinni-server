@@ -60,8 +60,8 @@ public class PortfolioController {
   public ResponseEntity<Resource> downloadPortfolio(@PathVariable UUID id) {
     Resource resource = fileStorageService.loadFileAsResource(id, FILE_TYPE);
 
-    // 원본 파일명 가져오기 (항상 존재함)
-    String originalFileName = fileStorageService.getOriginalFileName(id, FILE_TYPE);
+    // 원본 파일명 가져오기 (DB에서 조회)
+    String originalFileName = fileService.getFileInfo(id, FILE_TYPE).getOriginalFileName();
     String resourceFilename = resource.getFilename();
 
     // Content-Disposition 헤더 생성 (RFC 5987 형식으로 인코딩)
