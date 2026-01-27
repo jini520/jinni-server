@@ -13,6 +13,8 @@ import site.jejinni.server.dto.file.FileListDto;
 import site.jejinni.server.service.file.FileStorageService;
 import site.jejinni.server.service.file.FileType;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -92,9 +94,6 @@ public class FileController {
       @RequestParam(value = "type", defaultValue = "DOCUMENT") FileType type) {
 
     FileStorageService.FileInfo fileInfo = fileStorageService.storeFile(file, type);
-
-    // originalFileName: 전체 파일명 저장 (확장자 포함)
-    String originalName = fileInfo.getOriginalFileName() != null ? fileInfo.getOriginalFileName() : "";
     String extension = fileInfo.getExtension();
 
     // 파일 생성일과 수정일 조회
@@ -103,7 +102,7 @@ public class FileController {
 
     FileDto fileDto = FileDto.builder()
         .id(fileInfo.getId())
-        .originalFileName(originalName)
+        .originalFileName(fileInfo.getOriginalFileName())
         .fileSize(file.getSize())
         .contentType(file.getContentType())
         .fileType(type)
@@ -121,23 +120,27 @@ public class FileController {
    * GET /api/files/download/{id}?type=IMAGE 또는 ?type=DOCUMENT
    */
   @GetMapping("/download/{id}")
-  @SuppressWarnings("null")
   public ResponseEntity<Resource> downloadFile(
       @PathVariable UUID id,
       @RequestParam(value = "type", defaultValue = "DOCUMENT") FileType type) {
     String extension = fileStorageService.getFileExtension(id, type);
     Resource resource = fileStorageService.loadFileAsResource(id, extension, type);
 
-    // 원본 파일명 가져오기
+    // 원본 파일명 가져오기 (항상 존재함)
     String originalFileName = fileStorageService.getOriginalFileName(id, type);
-    String downloadFileName = originalFileName != null && !originalFileName.isEmpty()
-        ? originalFileName
-        : resource.getFilename();
+
+    // Content-Disposition 헤더 생성 (RFC 5987 형식으로 인코딩)
+    // 한글 및 특수문자 처리를 위해 UTF-8 인코딩 사용
+    String encodedFileName = URLEncoder.encode(originalFileName, StandardCharsets.UTF_8)
+        .replace("+", "%20"); // 공백 문자 처리
+    String contentDispositionValue = String.format(
+        "attachment; filename=\"%s\"; filename*=UTF-8''%s",
+        originalFileName.replace("\"", "\\\""), // 따옴표 이스케이프
+        encodedFileName);
 
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
-        .header(HttpHeaders.CONTENT_DISPOSITION,
-            "attachment; filename=\"" + downloadFileName + "\"")
+        .header(HttpHeaders.CONTENT_DISPOSITION, contentDispositionValue)
         .body(resource);
   }
 
@@ -153,52 +156,32 @@ public class FileController {
     boolean exists = fileStorageService.fileExists(id, extension, type);
 
     String originalFileName = fileStorageService.getOriginalFileName(id, type);
+
+    if (!exists) {
+      FileDto fileDto = FileDto.builder()
+          .id(id)
+          .originalFileName(originalFileName)
+          .fileType(type)
+          .exists(false)
+          .build();
+      return ResponseEntity.ok(new ApiResponse<>(fileDto));
+    }
+
+    // 파일 정보 조회
+    long fileSize = fileStorageService.getFileSize(id, extension, type);
+    LocalDateTime createdAt = fileStorageService.getFileCreatedAt(id, extension, type);
+    LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(id, extension, type);
+
     FileDto fileDto = FileDto.builder()
         .id(id)
         .originalFileName(originalFileName)
         .fileType(type)
-        .exists(exists)
+        .fileSize(fileSize)
+        .downloadUrl("/api/files/download/" + id + "?type=" + type)
+        .exists(true)
+        .createdAt(createdAt)
+        .updatedAt(updatedAt)
         .build();
-
-    if (exists) {
-      try {
-        long fileSize = fileStorageService.getFileSize(id, extension, type);
-        LocalDateTime createdAt = fileStorageService.getFileCreatedAt(id, extension, type);
-        LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(id, extension, type);
-        fileDto = FileDto.builder()
-            .id(id)
-            .originalFileName(originalFileName)
-            .fileType(type)
-            .fileSize(fileSize)
-            .downloadUrl("/api/files/download/" + id + "?type=" + type)
-            .exists(true)
-            .createdAt(createdAt)
-            .updatedAt(updatedAt)
-            .build();
-      } catch (Exception ex) {
-        try {
-          LocalDateTime createdAt = fileStorageService.getFileCreatedAt(id, extension, type);
-          LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(id, extension, type);
-          fileDto = FileDto.builder()
-              .id(id)
-              .originalFileName(originalFileName)
-              .fileType(type)
-              .exists(true)
-              .downloadUrl("/api/files/download/" + id + "?type=" + type)
-              .createdAt(createdAt)
-              .updatedAt(updatedAt)
-              .build();
-        } catch (Exception dateEx) {
-          fileDto = FileDto.builder()
-              .id(id)
-              .originalFileName(originalFileName)
-              .fileType(type)
-              .exists(true)
-              .downloadUrl("/api/files/download/" + id + "?type=" + type)
-              .build();
-        }
-      }
-    }
 
     return ResponseEntity.ok(new ApiResponse<>(fileDto));
   }
@@ -215,9 +198,6 @@ public class FileController {
 
     String oldExtension = fileStorageService.getFileExtension(id, type);
     FileStorageService.FileInfo newFileInfo = fileStorageService.updateFile(id, oldExtension, file, type);
-
-    // originalFileName: 전체 파일명 저장 (확장자 포함)
-    String originalName = newFileInfo.getOriginalFileName() != null ? newFileInfo.getOriginalFileName() : "";
     String newExtension = newFileInfo.getExtension();
 
     // 파일 생성일과 수정일 조회
@@ -226,7 +206,7 @@ public class FileController {
 
     FileDto fileDto = FileDto.builder()
         .id(newFileInfo.getId())
-        .originalFileName(originalName)
+        .originalFileName(newFileInfo.getOriginalFileName())
         .fileSize(file.getSize())
         .contentType(file.getContentType())
         .fileType(type)
