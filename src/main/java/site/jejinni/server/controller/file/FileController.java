@@ -43,9 +43,9 @@ public class FileController {
 
     List<FileDto> fileDtoList = fileInfoList.stream().map(fileInfo -> {
       try {
-        long fileSize = fileStorageService.getFileSize(fileInfo.getId(), fileInfo.getExtension(), type);
-        LocalDateTime createdAt = fileStorageService.getFileCreatedAt(fileInfo.getId(), fileInfo.getExtension(), type);
-        LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(fileInfo.getId(), fileInfo.getExtension(), type);
+        long fileSize = fileStorageService.getFileSize(fileInfo.getId(), type);
+        LocalDateTime createdAt = fileStorageService.getFileCreatedAt(fileInfo.getId(), type);
+        LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(fileInfo.getId(), type);
 
         return FileDto.builder()
             .id(fileInfo.getId())
@@ -94,11 +94,10 @@ public class FileController {
       @RequestParam(value = "type", defaultValue = "DOCUMENT") FileType type) {
 
     FileStorageService.FileInfo fileInfo = fileStorageService.storeFile(file, type);
-    String extension = fileInfo.getExtension();
 
     // 파일 생성일과 수정일 조회
-    LocalDateTime createdAt = fileStorageService.getFileCreatedAt(fileInfo.getId(), extension, type);
-    LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(fileInfo.getId(), extension, type);
+    LocalDateTime createdAt = fileStorageService.getFileCreatedAt(fileInfo.getId(), type);
+    LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(fileInfo.getId(), type);
 
     FileDto fileDto = FileDto.builder()
         .id(fileInfo.getId())
@@ -123,8 +122,7 @@ public class FileController {
   public ResponseEntity<Resource> downloadFile(
       @PathVariable UUID id,
       @RequestParam(value = "type", defaultValue = "DOCUMENT") FileType type) {
-    String extension = fileStorageService.getFileExtension(id, type);
-    Resource resource = fileStorageService.loadFileAsResource(id, extension, type);
+    Resource resource = fileStorageService.loadFileAsResource(id, type);
 
     // 원본 파일명 가져오기 (항상 존재함)
     String originalFileName = fileStorageService.getOriginalFileName(id, type);
@@ -153,7 +151,7 @@ public class FileController {
     }
 
     return ResponseEntity.ok()
-        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .contentType(MediaType.parseMediaType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
         .header(HttpHeaders.CONTENT_DISPOSITION, contentDispositionValue)
         .body(resource);
   }
@@ -166,8 +164,7 @@ public class FileController {
   public ResponseEntity<ApiResponse<FileDto>> getFileInfo(
       @PathVariable UUID id,
       @RequestParam(value = "type", defaultValue = "DOCUMENT") FileType type) {
-    String extension = fileStorageService.getFileExtension(id, type);
-    boolean exists = fileStorageService.fileExists(id, extension, type);
+    boolean exists = fileStorageService.fileExists(id, type);
 
     String originalFileName = fileStorageService.getOriginalFileName(id, type);
 
@@ -182,9 +179,9 @@ public class FileController {
     }
 
     // 파일 정보 조회
-    long fileSize = fileStorageService.getFileSize(id, extension, type);
-    LocalDateTime createdAt = fileStorageService.getFileCreatedAt(id, extension, type);
-    LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(id, extension, type);
+    long fileSize = fileStorageService.getFileSize(id, type);
+    LocalDateTime createdAt = fileStorageService.getFileCreatedAt(id, type);
+    LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(id, type);
 
     FileDto fileDto = FileDto.builder()
         .id(id)
@@ -210,13 +207,11 @@ public class FileController {
       @RequestParam("file") MultipartFile file,
       @RequestParam(value = "type", defaultValue = "DOCUMENT") FileType type) {
 
-    String oldExtension = fileStorageService.getFileExtension(id, type);
-    FileStorageService.FileInfo newFileInfo = fileStorageService.updateFile(id, oldExtension, file, type);
-    String newExtension = newFileInfo.getExtension();
+    FileStorageService.FileInfo newFileInfo = fileStorageService.updateFile(id, file, type);
 
     // 파일 생성일과 수정일 조회
-    LocalDateTime createdAt = fileStorageService.getFileCreatedAt(newFileInfo.getId(), newExtension, type);
-    LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(newFileInfo.getId(), newExtension, type);
+    LocalDateTime createdAt = fileStorageService.getFileCreatedAt(newFileInfo.getId(), type);
+    LocalDateTime updatedAt = fileStorageService.getFileUpdatedAt(newFileInfo.getId(), type);
 
     FileDto fileDto = FileDto.builder()
         .id(newFileInfo.getId())
@@ -241,8 +236,7 @@ public class FileController {
   public ResponseEntity<ApiResponse<String>> deleteFile(
       @PathVariable UUID id,
       @RequestParam(value = "type", defaultValue = "DOCUMENT") FileType type) {
-    String extension = fileStorageService.getFileExtension(id, type);
-    fileStorageService.deleteFile(id, extension, type);
+    fileStorageService.deleteFile(id, type);
     return ResponseEntity.ok(new ApiResponse<>("파일이 삭제되었습니다: " + id));
   }
 }

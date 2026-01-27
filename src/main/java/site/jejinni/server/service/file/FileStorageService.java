@@ -58,7 +58,9 @@ public class FileStorageService {
 
   public FileStorageService(
       @Value("${file.upload-dir.images:/var/lib/jejinni-server/uploads/images}") String imageUploadDir,
-      @Value("${file.upload-dir.documents:/var/lib/jejinni-server/uploads/documents}") String documentUploadDir) {
+      @Value("${file.upload-dir.documents:/var/lib/jejinni-server/uploads/documents}") String documentUploadDir,
+      @Value("${file.upload-dir.resumes:/var/lib/jejinni-server/uploads/resumes}") String resumeUploadDir,
+      @Value("${file.upload-dir.portfolios:/var/lib/jejinni-server/uploads/portfolios}") String portfolioUploadDir) {
 
     this.fileStorageLocations = new HashMap<>();
 
@@ -76,6 +78,22 @@ public class FileStorageService {
       this.fileStorageLocations.put(FileType.DOCUMENT, documentLocation);
     } catch (IOException ex) {
       throw new RuntimeException("문서 저장 디렉토리를 생성할 수 없습니다: " + documentUploadDir, ex);
+    }
+
+    Path resumeLocation = Paths.get(resumeUploadDir).toAbsolutePath().normalize();
+    try {
+      Files.createDirectories(resumeLocation);
+      this.fileStorageLocations.put(FileType.RESUME, resumeLocation);
+    } catch (IOException ex) {
+      throw new RuntimeException("이력서 저장 디렉토리를 생성할 수 없습니다: " + resumeUploadDir, ex);
+    }
+
+    Path portfolioLocation = Paths.get(portfolioUploadDir).toAbsolutePath().normalize();
+    try {
+      Files.createDirectories(portfolioLocation);
+      this.fileStorageLocations.put(FileType.PORTFOLIO, portfolioLocation);
+    } catch (IOException ex) {
+      throw new RuntimeException("포트폴리오 저장 디렉토리를 생성할 수 없습니다: " + portfolioUploadDir, ex);
     }
   }
 
@@ -119,7 +137,8 @@ public class FileStorageService {
     }
   }
 
-  public Resource loadFileAsResource(UUID id, String extension, FileType fileType) {
+  public Resource loadFileAsResource(UUID id, FileType fileType) {
+    String extension = getFileExtension(id, fileType);
     String fileName = id.toString() + (extension != null ? extension : "");
     try {
       Path storageLocation = getStorageLocation(fileType);
@@ -135,8 +154,9 @@ public class FileStorageService {
     }
   }
 
-  public boolean fileExists(UUID id, String extension, FileType fileType) {
+  public boolean fileExists(UUID id, FileType fileType) {
     try {
+      String extension = getFileExtension(id, fileType);
       String fileName = id.toString() + (extension != null ? extension : "");
       Path storageLocation = getStorageLocation(fileType);
       Path filePath = storageLocation.resolve(fileName).normalize();
@@ -146,8 +166,9 @@ public class FileStorageService {
     }
   }
 
-  public long getFileSize(UUID id, String extension, FileType fileType) {
+  public long getFileSize(UUID id, FileType fileType) {
     try {
+      String extension = getFileExtension(id, fileType);
       String fileName = id.toString() + (extension != null ? extension : "");
       Path storageLocation = getStorageLocation(fileType);
       Path filePath = storageLocation.resolve(fileName).normalize();
@@ -157,8 +178,9 @@ public class FileStorageService {
     }
   }
 
-  public LocalDateTime getFileCreatedAt(UUID id, String extension, FileType fileType) {
+  public LocalDateTime getFileCreatedAt(UUID id, FileType fileType) {
     try {
+      String extension = getFileExtension(id, fileType);
       String fileName = id.toString() + (extension != null ? extension : "");
       Path storageLocation = getStorageLocation(fileType);
       Path filePath = storageLocation.resolve(fileName).normalize();
@@ -172,8 +194,9 @@ public class FileStorageService {
     }
   }
 
-  public LocalDateTime getFileUpdatedAt(UUID id, String extension, FileType fileType) {
+  public LocalDateTime getFileUpdatedAt(UUID id, FileType fileType) {
     try {
+      String extension = getFileExtension(id, fileType);
       String fileName = id.toString() + (extension != null ? extension : "");
       Path storageLocation = getStorageLocation(fileType);
       Path filePath = storageLocation.resolve(fileName).normalize();
@@ -256,13 +279,13 @@ public class FileStorageService {
     }
   }
 
-  public FileInfo updateFile(UUID oldId, String oldExtension, MultipartFile newFile, FileType fileType) {
+  public FileInfo updateFile(UUID oldId, MultipartFile newFile, FileType fileType) {
     if (newFile.isEmpty()) {
       throw new IllegalArgumentException("업로드할 파일이 비어있습니다.");
     }
 
     if (oldId != null) {
-      deleteFile(oldId, oldExtension, fileType);
+      deleteFile(oldId, fileType);
     }
     return storeFile(newFile, fileType);
   }
@@ -308,8 +331,9 @@ public class FileStorageService {
     }
   }
 
-  public void deleteFile(UUID id, String extension, FileType fileType) {
+  public void deleteFile(UUID id, FileType fileType) {
     try {
+      String extension = getFileExtension(id, fileType);
       String fileName = id.toString() + (extension != null ? extension : "");
       Path storageLocation = getStorageLocation(fileType);
       Path filePath = storageLocation.resolve(fileName).normalize();
