@@ -1,5 +1,6 @@
 package site.jejinni.server.service.file;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +23,7 @@ public class FileService {
 
   private final FileRepository fileRepository;
   private final FileStorageService fileStorageService;
+  private final EntityManager entityManager;
 
   /**
    * 파일 리스트 조회 (DB에서 조회)
@@ -78,19 +80,21 @@ public class FileService {
         .build();
 
     // 파일 시스템에서 생성된 UUID를 DB에도 사용
+    // persist()를 사용하여 새 엔티티로 저장 (save()는 merge를 시도하므로 문제 발생)
     fileEntity.setId(fileInfo.getId());
-    File savedFile = fileRepository.save(fileEntity);
+    entityManager.persist(fileEntity);
+    entityManager.flush(); // 즉시 DB에 반영하여 createdAt, updatedAt을 가져오기 위해
 
     return FileDto.builder()
-        .id(savedFile.getId())
-        .originalFileName(savedFile.getOriginalFileName())
-        .fileSize(savedFile.getFileSize())
-        .contentType(savedFile.getContentType())
-        .fileType(savedFile.getFileType())
-        .downloadUrl(getDownloadUrl(savedFile.getId(), fileType))
+        .id(fileEntity.getId())
+        .originalFileName(fileEntity.getOriginalFileName())
+        .fileSize(fileEntity.getFileSize())
+        .contentType(fileEntity.getContentType())
+        .fileType(fileEntity.getFileType())
+        .downloadUrl(getDownloadUrl(fileEntity.getId(), fileType))
         .exists(true)
-        .createdAt(savedFile.getCreatedAt())
-        .updatedAt(savedFile.getUpdatedAt())
+        .createdAt(fileEntity.getCreatedAt())
+        .updatedAt(fileEntity.getUpdatedAt())
         .build();
   }
 
@@ -141,8 +145,7 @@ public class FileService {
     existingFile.updateFile(
         newFileInfo.getOriginalFileName(),
         newFile.getSize(),
-        newFile.getContentType()
-    );
+        newFile.getContentType());
 
     File updatedFile = fileRepository.save(existingFile);
 
