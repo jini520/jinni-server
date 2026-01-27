@@ -19,7 +19,6 @@ import java.util.UUID;
 public class File extends BaseEntity {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
   @Column(name = "file_id", columnDefinition = "UUID")
   private UUID id;
 
