@@ -131,6 +131,36 @@ public class FileService {
   }
 
   /**
+   * 가장 최근 업로드된 파일 1개 조회
+   */
+  @Transactional(readOnly = true)
+  public FileDto getLatestFile(FileType fileType) {
+    File file = fileRepository.findFirstByFileTypeOrderByCreatedAtDesc(fileType)
+        .orElse(null);
+
+    if (file == null) {
+      return FileDto.builder()
+          .fileType(fileType)
+          .exists(false)
+          .build();
+    }
+
+    boolean fileExists = fileStorageService.fileExists(file.getId(), fileType);
+
+    return FileDto.builder()
+        .id(file.getId())
+        .originalFileName(file.getOriginalFileName())
+        .fileType(file.getFileType())
+        .fileSize(file.getFileSize())
+        .contentType(file.getContentType())
+        .downloadUrl(getDownloadUrl(file.getId(), fileType))
+        .exists(fileExists)
+        .createdAt(file.getCreatedAt())
+        .updatedAt(file.getUpdatedAt())
+        .build();
+  }
+
+  /**
    * 파일 업데이트 (DB 업데이트)
    */
   @Transactional

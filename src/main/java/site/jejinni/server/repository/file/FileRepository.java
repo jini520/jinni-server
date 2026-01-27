@@ -18,4 +18,6 @@ public interface FileRepository extends JpaRepository<File, UUID> {
   long countByFileType(FileType fileType);
 
   Optional<File> findByIdAndFileType(UUID id, FileType fileType);
+
+  Optional<File> findFirstByFileTypeOrderByCreatedAtDesc(FileType fileType);
 }

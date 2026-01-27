@@ -82,6 +82,16 @@ public class PortfolioController {
   }
 
   /**
+   * 가장 최근 업로드된 포트폴리오 조회
+   * GET /api/portfolios/latest
+   */
+  @GetMapping("/latest")
+  public ResponseEntity<ApiResponse<FileDto>> getLatestPortfolio() {
+    FileDto fileDto = fileService.getLatestFile(FILE_TYPE);
+    return ResponseEntity.ok(new ApiResponse<>(fileDto));
+  }
+
+  /**
    * 포트폴리오 업데이트 (Update)
    * PUT /api/portfolios/{id}
    */

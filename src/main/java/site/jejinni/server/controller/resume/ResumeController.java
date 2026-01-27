@@ -82,6 +82,16 @@ public class ResumeController {
   }
 
   /**
+   * 가장 최근 업로드된 이력서 조회
+   * GET /api/resumes/latest
+   */
+  @GetMapping("/latest")
+  public ResponseEntity<ApiResponse<FileDto>> getLatestResume() {
+    FileDto fileDto = fileService.getLatestFile(FILE_TYPE);
+    return ResponseEntity.ok(new ApiResponse<>(fileDto));
+  }
+
+  /**
    * 이력서 업데이트 (Update)
    * PUT /api/resumes/{id}
    */
