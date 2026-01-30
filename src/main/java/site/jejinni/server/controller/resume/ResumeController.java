@@ -70,6 +70,16 @@ public class ResumeController {
         .header(HttpHeaders.CONTENT_DISPOSITION, contentDispositionValue)
         .body(resource);
   }
+  
+  /**
+   * 가장 최근 업로드된 이력서 조회
+   * GET /api/resumes/latest
+   */
+  @GetMapping("/latest")
+  public ResponseEntity<ApiResponse<FileDto>> getLatestResume() {
+    FileDto fileDto = fileService.getLatestFile(FILE_TYPE);
+    return ResponseEntity.ok(new ApiResponse<>(fileDto));
+  }
 
   /**
    * 이력서 정보 조회 (Read)
@@ -78,16 +88,6 @@ public class ResumeController {
   @GetMapping("/{id}")
   public ResponseEntity<ApiResponse<FileDto>> getResumeInfo(@PathVariable UUID id) {
     FileDto fileDto = fileService.getFileInfo(id, FILE_TYPE);
-    return ResponseEntity.ok(new ApiResponse<>(fileDto));
-  }
-
-  /**
-   * 가장 최근 업로드된 이력서 조회
-   * GET /api/resumes/latest
-   */
-  @GetMapping("/latest")
-  public ResponseEntity<ApiResponse<FileDto>> getLatestResume() {
-    FileDto fileDto = fileService.getLatestFile(FILE_TYPE);
     return ResponseEntity.ok(new ApiResponse<>(fileDto));
   }
 

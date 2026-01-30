@@ -72,22 +72,22 @@ public class PortfolioController {
   }
 
   /**
-   * 포트폴리오 정보 조회 (Read)
-   * GET /api/portfolios/{id}
-   */
-  @GetMapping("/{id}")
-  public ResponseEntity<ApiResponse<FileDto>> getPortfolioInfo(@PathVariable UUID id) {
-    FileDto fileDto = fileService.getFileInfo(id, FILE_TYPE);
-    return ResponseEntity.ok(new ApiResponse<>(fileDto));
-  }
-
-  /**
    * 가장 최근 업로드된 포트폴리오 조회
    * GET /api/portfolios/latest
    */
   @GetMapping("/latest")
   public ResponseEntity<ApiResponse<FileDto>> getLatestPortfolio() {
     FileDto fileDto = fileService.getLatestFile(FILE_TYPE);
+    return ResponseEntity.ok(new ApiResponse<>(fileDto));
+  }
+
+  /**
+   * 포트폴리오 정보 조회 (Read)
+   * GET /api/portfolios/{id}
+   */
+  @GetMapping("/{id}")
+  public ResponseEntity<ApiResponse<FileDto>> getPortfolioInfo(@PathVariable UUID id) {
+    FileDto fileDto = fileService.getFileInfo(id, FILE_TYPE);
     return ResponseEntity.ok(new ApiResponse<>(fileDto));
   }
 
