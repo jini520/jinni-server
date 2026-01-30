@@ -70,15 +70,30 @@ public class ResumeController {
         .header(HttpHeaders.CONTENT_DISPOSITION, contentDispositionValue)
         .body(resource);
   }
-  
+
   /**
-   * 가장 최근 업로드된 이력서 조회
+   * 가장 최근 업로드된 이력서 다운로드
    * GET /api/resumes/latest
    */
   @GetMapping("/latest")
-  public ResponseEntity<ApiResponse<FileDto>> getLatestResume() {
+  public ResponseEntity<Resource> getLatestResume() {
     FileDto fileDto = fileService.getLatestFile(FILE_TYPE);
-    return ResponseEntity.ok(new ApiResponse<>(fileDto));
+
+    if (fileDto == null || fileDto.getExists() == null || !fileDto.getExists()) {
+      throw new RuntimeException("이력서를 찾을 수 없습니다.");
+    }
+
+    Resource resource = fileStorageService.loadFileAsResource(fileDto.getId(), FILE_TYPE);
+    String resourceFilename = resource.getFilename();
+
+    // Content-Disposition 헤더 생성 (공통 유틸리티 사용)
+    String contentDispositionValue = fileService.createContentDispositionHeader(
+        fileDto.getOriginalFileName(), resourceFilename);
+
+    return ResponseEntity.ok()
+        .contentType(MediaType.parseMediaType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+        .header(HttpHeaders.CONTENT_DISPOSITION, contentDispositionValue)
+        .body(resource);
   }
 
   /**
