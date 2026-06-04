@@ -11,5 +11,6 @@ public class CategoryDto {
 
   private UUID id;
   private String name;
+  private String nameEn;
   private Integer order;
 }

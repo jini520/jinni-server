@@ -62,6 +62,7 @@ public class SkillService {
 	public ApiResponse<CategoryDto> createCategory(CategoryRequestDto request) {
 		Category category = Category.builder()
 				.name(request.getName())
+				.nameEn(request.getNameEn())
 				.order(request.getOrder())
 				.build();
 
@@ -77,6 +78,9 @@ public class SkillService {
 
 		if (request.getName() != null) {
 			category.updateName(request.getName());
+		}
+		if (request.getNameEn() != null) {
+			category.updateNameEn(request.getNameEn());
 		}
 		if (request.getOrder() != null) {
 			category.updateOrder(request.getOrder());
@@ -153,6 +157,7 @@ public class SkillService {
 		return CategoryDto.builder()
 				.id(category.getId())
 				.name(category.getName())
+				.nameEn(category.getNameEn())
 				.order(category.getOrder())
 				.build();
 	}

@@ -6,5 +6,6 @@ import lombok.Getter;
 public class CategoryRequestDto {
 
   private String name;
+  private String nameEn;
   private Integer order;
 }

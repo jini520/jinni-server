@@ -23,17 +23,25 @@ public class Category extends BaseEntity {
   @Column(name = "name", nullable = false, length = 100)
   private String name;
 
+  @Column(name = "name_en", nullable = false, length = 100)
+  private String nameEn;
+
   @Column(name = "order_index", nullable = false)
   private Integer order;
 
   @Builder
-  public Category(String name, Integer order) {
+  public Category(String name, String nameEn, Integer order) {
     this.name = name;
+    this.nameEn = nameEn;
     this.order = order != null ? order : 0;
   }
 
   public void updateName(String name) {
     this.name = name;
+  }
+
+  public void updateNameEn(String nameEn) {
+    this.nameEn = nameEn;
   }
 
   public void updateOrder(Integer order) {
