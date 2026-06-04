@@ -2,6 +2,7 @@ package site.jejinni.server.service.career;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import site.jejinni.server.exception.NotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import site.jejinni.server.domain.entity.career.Business;
 import site.jejinni.server.domain.entity.career.CareerProject;
@@ -62,14 +63,14 @@ public class CareerService {
 
 	public ApiResponse<BusinessDto> getBusinessById(UUID id) {
 		Business business = businessRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Business not found: " + id));
+				.orElseThrow(() -> new NotFoundException("Business not found: " + id));
 		return new ApiResponse<>(BusinessDto.from(business));
 	}
 
 	@Transactional
 	public ApiResponse<BusinessDto> updateBusiness(UUID id, BusinessRequestDto dto) {
 		Business business = businessRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Business not found: " + id));
+				.orElseThrow(() -> new NotFoundException("Business not found: " + id));
 
 		business.updateDates(dto.getStartDate(), dto.getEndDate());
 		business.updateCompanyInfo(dto.getCompany(), dto.getDepartment(), dto.getPosition());
@@ -104,14 +105,14 @@ public class CareerService {
 
 	public ApiResponse<CareerProjectDto> getCareerProjectById(UUID id) {
 		CareerProject project = careerProjectRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Career project not found: " + id));
+				.orElseThrow(() -> new NotFoundException("Career project not found: " + id));
 		return new ApiResponse<>(CareerProjectDto.from(project));
 	}
 
 	@Transactional
 	public ApiResponse<CareerProjectDto> updateCareerProject(UUID id, CareerProjectRequestDto dto) {
 		CareerProject project = careerProjectRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Career project not found: " + id));
+				.orElseThrow(() -> new NotFoundException("Career project not found: " + id));
 
 		project.updateDates(dto.getStartDate(), dto.getEndDate());
 		project.updateCompanyInfo(dto.getCompany(), dto.getDepartment(), dto.getPosition());

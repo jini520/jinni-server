@@ -7,6 +7,7 @@ import site.jejinni.server.domain.entity.certification.Award;
 import site.jejinni.server.domain.entity.certification.Certification;
 import site.jejinni.server.dto.certification.*;
 import site.jejinni.server.dto.common.ApiResponse;
+import site.jejinni.server.exception.NotFoundException;
 import site.jejinni.server.repository.certification.AwardRepository;
 import site.jejinni.server.repository.certification.CertificationRepository;
 
@@ -59,14 +60,14 @@ public class CertificationService {
 
 	public ApiResponse<CertificationDto> getCertificationById(UUID id) {
 		Certification certification = certificationRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Certification not found: " + id));
+				.orElseThrow(() -> new NotFoundException("Certification not found: " + id));
 		return new ApiResponse<>(CertificationDto.from(certification));
 	}
 
 	@Transactional
 	public ApiResponse<CertificationDto> updateCertification(UUID id, CertificationRequestDto dto) {
 		Certification certification = certificationRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Certification not found: " + id));
+				.orElseThrow(() -> new NotFoundException("Certification not found: " + id));
 
 		certification.updateName(dto.getName());
 		certification.updateDate(dto.getDate());
@@ -99,14 +100,14 @@ public class CertificationService {
 
 	public ApiResponse<AwardDto> getAwardById(UUID id) {
 		Award award = awardRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Award not found: " + id));
+				.orElseThrow(() -> new NotFoundException("Award not found: " + id));
 		return new ApiResponse<>(AwardDto.from(award));
 	}
 
 	@Transactional
 	public ApiResponse<AwardDto> updateAward(UUID id, AwardRequestDto dto) {
 		Award award = awardRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Award not found: " + id));
+				.orElseThrow(() -> new NotFoundException("Award not found: " + id));
 
 		award.updateName(dto.getName());
 		award.updateDate(dto.getDate());

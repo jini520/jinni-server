@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import site.jejinni.server.domain.entity.project.Project;
 import site.jejinni.server.dto.common.ApiResponse;
+import site.jejinni.server.exception.NotFoundException;
 import site.jejinni.server.dto.project.ProjectDetailDto;
 import site.jejinni.server.dto.project.ProjectListItemDto;
 import site.jejinni.server.dto.project.ProjectListDto;
@@ -70,14 +71,14 @@ public class ProjectService {
 
 	public ApiResponse<ProjectDetailDto> getProjectDetail(UUID projectId) {
 		Project project = projectRepository.findById(projectId)
-				.orElseThrow(() -> new IllegalArgumentException("Project not found with id: " + projectId));
+				.orElseThrow(() -> new NotFoundException("Project not found with id: " + projectId));
 		return new ApiResponse<>(buildDetailResponse(project));
 	}
 
 	@Transactional
 	public ApiResponse<ProjectDetailDto> updateProject(UUID projectId, ProjectRequestDto request) {
 		Project project = projectRepository.findById(projectId)
-				.orElseThrow(() -> new IllegalArgumentException("Project not found with id: " + projectId));
+				.orElseThrow(() -> new NotFoundException("Project not found with id: " + projectId));
 
 		if (request.getTitle() != null)            project.updateTitle(request.getTitle());
 		if (request.getDescription() != null)      project.updateDescription(request.getDescription());
@@ -103,7 +104,7 @@ public class ProjectService {
 	@Transactional
 	public void deleteProject(UUID projectId) {
 		Project project = projectRepository.findById(projectId)
-				.orElseThrow(() -> new IllegalArgumentException("Project not found with id: " + projectId));
+				.orElseThrow(() -> new NotFoundException("Project not found with id: " + projectId));
 		fileStorageService.deleteProjectImageDir(projectId);
 		projectRepository.delete(project);
 	}
@@ -111,7 +112,7 @@ public class ProjectService {
 	@Transactional
 	public ApiResponse<ProjectDetailDto> addContentImageUrl(UUID projectId, String newImageUrl) {
 		Project project = projectRepository.findById(projectId)
-				.orElseThrow(() -> new IllegalArgumentException("Project not found with id: " + projectId));
+				.orElseThrow(() -> new NotFoundException("Project not found with id: " + projectId));
 
 		String[] existing = project.getContentImageUrls();
 		if (existing == null) existing = new String[0];
@@ -125,7 +126,7 @@ public class ProjectService {
 	@Transactional
 	public ApiResponse<ProjectDetailDto> removeContentImageUrl(UUID projectId, UUID fileId) {
 		Project project = projectRepository.findById(projectId)
-				.orElseThrow(() -> new IllegalArgumentException("Project not found with id: " + projectId));
+				.orElseThrow(() -> new NotFoundException("Project not found with id: " + projectId));
 
 		String targetUrl = "/api/projects/" + projectId + "/images/" + fileId;
 		String[] existing = project.getContentImageUrls();
@@ -135,7 +136,7 @@ public class ProjectService {
 				.toArray(String[]::new);
 
 		if (updated.length == existing.length) {
-			throw new IllegalArgumentException("Image not found in project: " + fileId);
+			throw new NotFoundException("Image not found in project: " + fileId);
 		}
 
 		project.updateContentImageUrls(updated);

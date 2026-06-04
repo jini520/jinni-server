@@ -2,6 +2,7 @@ package site.jejinni.server.service.skill;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import site.jejinni.server.exception.NotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import site.jejinni.server.domain.entity.skill.Category;
 import site.jejinni.server.domain.entity.skill.Skill;
@@ -53,7 +54,7 @@ public class SkillService {
 
 	public ApiResponse<CategoryDto> getCategory(UUID id) {
 		Category category = categoryRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + id));
+				.orElseThrow(() -> new NotFoundException("Category not found with id: " + id));
 
 		return new ApiResponse<>(toCategoryDto(category));
 	}
@@ -74,7 +75,7 @@ public class SkillService {
 	@Transactional
 	public ApiResponse<CategoryDto> updateCategory(UUID id, CategoryRequestDto request) {
 		Category category = categoryRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + id));
+				.orElseThrow(() -> new NotFoundException("Category not found with id: " + id));
 
 		if (request.getName() != null) {
 			category.updateName(request.getName());
@@ -92,7 +93,7 @@ public class SkillService {
 	@Transactional
 	public void deleteCategory(UUID id) {
 		Category category = categoryRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + id));
+				.orElseThrow(() -> new NotFoundException("Category not found with id: " + id));
 
 		// 카테고리에 속한 스킬이 있는지 확인
 		if (skillRepository.existsByCategory(category)) {
@@ -104,7 +105,7 @@ public class SkillService {
 
 	public ApiResponse<SkillDto> getSkill(UUID id) {
 		Skill skill = skillRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Skill not found with id: " + id));
+				.orElseThrow(() -> new NotFoundException("Skill not found with id: " + id));
 
 		return new ApiResponse<>(toSkillDto(skill));
 	}
@@ -112,7 +113,7 @@ public class SkillService {
 	@Transactional
 	public ApiResponse<SkillDto> createSkill(SkillRequestDto request) {
 		Category category = categoryRepository.findById(request.getCategoryId())
-				.orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + request.getCategoryId()));
+				.orElseThrow(() -> new NotFoundException("Category not found with id: " + request.getCategoryId()));
 
 		Skill skill = Skill.builder()
 				.name(request.getName())
@@ -128,14 +129,14 @@ public class SkillService {
 	@Transactional
 	public ApiResponse<SkillDto> updateSkill(UUID id, SkillRequestDto request) {
 		Skill skill = skillRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Skill not found with id: " + id));
+				.orElseThrow(() -> new NotFoundException("Skill not found with id: " + id));
 
 		if (request.getName() != null) {
 			skill.updateName(request.getName());
 		}
 		if (request.getCategoryId() != null) {
 			Category category = categoryRepository.findById(request.getCategoryId())
-					.orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + request.getCategoryId()));
+					.orElseThrow(() -> new NotFoundException("Category not found with id: " + request.getCategoryId()));
 			skill.updateCategory(category);
 		}
 		if (request.getOrder() != null) {
@@ -148,7 +149,7 @@ public class SkillService {
 	@Transactional
 	public void deleteSkill(UUID id) {
 		Skill skill = skillRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Skill not found with id: " + id));
+				.orElseThrow(() -> new NotFoundException("Skill not found with id: " + id));
 
 		skillRepository.delete(skill);
 	}

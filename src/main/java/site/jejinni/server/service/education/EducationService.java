@@ -7,6 +7,7 @@ import site.jejinni.server.domain.entity.education.Education;
 import site.jejinni.server.dto.education.EducationDto;
 import site.jejinni.server.dto.education.EducationRequestDto;
 import site.jejinni.server.dto.common.ApiResponse;
+import site.jejinni.server.exception.NotFoundException;
 import site.jejinni.server.repository.education.EducationRepository;
 
 import java.util.List;
@@ -48,14 +49,14 @@ public class EducationService {
 
 	public ApiResponse<EducationDto> getEducationById(UUID id) {
 		Education education = educationRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Education not found: " + id));
+				.orElseThrow(() -> new NotFoundException("Education not found: " + id));
 		return new ApiResponse<>(EducationDto.from(education));
 	}
 
 	@Transactional
 	public ApiResponse<EducationDto> updateEducation(UUID id, EducationRequestDto dto) {
 		Education education = educationRepository.findById(id)
-				.orElseThrow(() -> new IllegalArgumentException("Education not found: " + id));
+				.orElseThrow(() -> new NotFoundException("Education not found: " + id));
 
 		education.updateEducation(dto.getEducation());
 		education.updateStartDate(dto.getStartDate());

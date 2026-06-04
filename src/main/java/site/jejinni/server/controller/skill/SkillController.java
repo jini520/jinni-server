@@ -1,5 +1,6 @@
 package site.jejinni.server.controller.skill;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +42,7 @@ public class SkillController {
 	}
 
 	@PostMapping("/categories")
-	public ResponseEntity<ApiResponse<CategoryDto>> createCategory(@RequestBody CategoryRequestDto request) {
+	public ResponseEntity<ApiResponse<CategoryDto>> createCategory(@Valid @RequestBody CategoryRequestDto request) {
 		ApiResponse<CategoryDto> category = skillService.createCategory(request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(category);
 	}
